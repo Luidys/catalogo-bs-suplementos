@@ -755,21 +755,23 @@ function useDemo() {
 }
 
 function normalizeSettings(s) {
+  // Google Sheets entrega los números como número (ej. WhatsApp o teléfono): se convierten a texto.
+  const txt = v => (v === undefined || v === null) ? '' : String(v).trim();
   return {
-    businessName: s.businessName || 'B&S Suplementosvip',
-    logoUrl: s.logoUrl || '',
-    whatsapp: s.whatsapp || '',
+    businessName: txt(s.businessName) || 'B&S Suplementosvip',
+    logoUrl: txt(s.logoUrl),
+    whatsapp: txt(s.whatsapp),
     tasaBCV: parseFloat(s.tasaBCV) || 0,
     tasaParalela: parseFloat(s.tasaParalela) || 0,
-    tasaActiva: s.tasaActiva || 'bcv',
-    adminToken: s.adminToken || '',
-    pagoMovilBanco: s.pagoMovilBanco || '',
-    pagoMovilTelefono: s.pagoMovilTelefono || '',
-    pagoMovilCedula: s.pagoMovilCedula || '',
-    binanceId: s.binanceId || '',
-    zelleCorreo: s.zelleCorreo || '',
-    zelleTitular: s.zelleTitular || '',
-    notaPago: s.notaPago || ''
+    tasaActiva: txt(s.tasaActiva) || 'bcv',
+    adminToken: txt(s.adminToken),
+    pagoMovilBanco: txt(s.pagoMovilBanco),
+    pagoMovilTelefono: txt(s.pagoMovilTelefono),
+    pagoMovilCedula: txt(s.pagoMovilCedula),
+    binanceId: txt(s.binanceId),
+    zelleCorreo: txt(s.zelleCorreo),
+    zelleTitular: txt(s.zelleTitular),
+    notaPago: txt(s.notaPago)
   };
 }
 
@@ -1220,6 +1222,7 @@ function copyPaymentValue(btn, value) {
 
 function sendOrderWhatsApp() {
   if (cart.length === 0) { showToast('Agrega al menos un producto', 'err'); return; }
+  if (!String(settings.whatsapp || '').replace(/\D/g, '')) { showToast('El negocio aún no configuró su número de WhatsApp', 'err'); return; }
   const yaPago = document.getElementById('paidCheckbox').checked;
   let msg = yaPago
     ? `*PEDIDO PAGADO — ${settings.businessName}*\n✅ Ya realicé el pago, adjunto la captura en este chat.\n\n`
@@ -1245,8 +1248,10 @@ function sendOrderWhatsApp() {
     items: itemsResumen
   });
 
-  const phone = (settings.whatsapp || '').replace(/\D/g, '');
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  const phone = String(settings.whatsapp || '').replace(/\D/g, '');
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  const win = window.open(url, '_blank');
+  if (!win) window.location.href = url; // si el navegador bloquea la ventana, abre en la misma pestaña
 }
 
 function logOrderToBackend(order) {
